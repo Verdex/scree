@@ -10,14 +10,15 @@ use std::mem::MaybeUninit;
 
 static mut BACKGROUND : MaybeUninit<(CreatedHDC, HBITMAP)> = MaybeUninit::uninit();
 
-unsafe fn init(x : HWND) {
-    let z = GetDC(x);
-    let memdc = CreateCompatibleDC(z);
-    let backing = CreateCompatibleBitmap(z, 1000, 1000);
+unsafe fn set_background(window : HWND, width : i32, height : i32) {
+
+    let main = GetDC(window);
+    let memdc = CreateCompatibleDC(main);
+    let backing = CreateCompatibleBitmap(main, width, height);
     SelectObject(memdc, backing);
-    
+
     for (x, y) in (1..100).into_iter().flat_map(|x| (1..100).into_iter().map(move |y| (x, y))) {
-        SetPixel(memdc, 10 + x, 10 + y, COLORREF(0xFFFFFFFF));
+        //SetPixel(memdc, 10 + x, 10 + y, COLORREF(0x0));
     }
     BACKGROUND.write((memdc, backing));
 }
@@ -54,7 +55,7 @@ fn main() {
             None
         );
 
-        init(handle);
+        set_background(handle, 1000, 1000);
 
         let mut message = MSG::default();
 
@@ -69,14 +70,18 @@ fn main() {
 extern "system" fn callback(window : HWND, message : u32, wparam : WPARAM, lparam : LPARAM) -> LRESULT {
     unsafe {
         match message {
-            WM_PAINT => {
+            WM_SIZE => {
+                let w = lparam.0 as u16 as f32; 
+                let h = (lparam.0 >> 16) as f32;
 
-                let now = std::time::Instant::now();
+                println!("w{} :: h{}", w, h);
+
+                LRESULT(0)
+            },
+            WM_PAINT => {
 
                 let z = GetDC(window);
                 BitBlt(z, 0, 0, 1000, 1000, BACKGROUND.assume_init().0, 0, 0, SRCCOPY);
-
-                println!("{}", now.elapsed().as_millis());
 
                 LRESULT(0)
             }

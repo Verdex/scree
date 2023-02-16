@@ -85,12 +85,41 @@ extern "system" fn callback(window : HWND, message : u32, wparam : WPARAM, lpara
                 LRESULT(0)
             },
             WM_PAINT => {
+                let z = GetDC(window);
 
-                //let z = GetDC(window);
+                let mut a = POINT::default();
+                a.x = 300;
+                a.y = 300;
+                let mut b = POINT::default();
+                b.x = 400;
+                b.y = 400;
+                let c = [a, b];
+                SetDCPenColor(z, COLORREF(0x00000000));
+                Polyline(z, &c);
+
+                let mut a = POINT::default();
+                a.x = 0;
+                a.y = 0;
+                let mut b = POINT::default();
+                b.x = 100;
+                b.y = 100;
+                let mut c = POINT::default();
+                c.x = 600;
+                c.y = 600;
+                let mut d = POINT::default();
+                d.x = 700;
+                d.y = 700;
+                let c = [a, b, c, d];
+                let w = [2, 2];
+                PolyPolyline(z, &c as *const _, &w);
+
                 //BitBlt(z, 0, 0, 1000, 1000, BACKGROUND.assume_init().0, 0, 0, SRCCOPY);
 
                 LRESULT(0)
             }
+            /*WM_QUIT => {
+
+            }, */
             _ => DefWindowProcA(window, message, wparam, lparam),
         }
     }

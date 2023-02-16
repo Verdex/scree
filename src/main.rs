@@ -10,17 +10,18 @@ use std::mem::MaybeUninit;
 
 static mut BACKGROUND : MaybeUninit<(CreatedHDC, HBITMAP)> = MaybeUninit::uninit();
 
-unsafe fn set_background(window : HWND, width : i32, height : i32) {
+// TODO:  SelectObject has a dual in DestroyObject
+unsafe fn set_background(width : i32, height : i32) {
 
-    let main = GetDC(window);
+    /*let main = GetDC(HWND::default());
     let memdc = CreateCompatibleDC(main);
     let backing = CreateCompatibleBitmap(main, width, height);
     SelectObject(memdc, backing);
 
-    for (x, y) in (1..100).into_iter().flat_map(|x| (1..100).into_iter().map(move |y| (x, y))) {
-        //SetPixel(memdc, 10 + x, 10 + y, COLORREF(0x0));
+    for (x, y) in (0..width).into_iter().flat_map(|x| (0..height).into_iter().map(move |y| (x, y))) {
+        SetPixel(memdc, x, y, COLORREF(0x00FF00FF)); // NOTE:  00BBGGRR
     }
-    BACKGROUND.write((memdc, backing));
+    BACKGROUND.write((memdc, backing));*/
 }
 
 fn main() {
@@ -29,12 +30,14 @@ fn main() {
         let instance = GetModuleHandleA(None).unwrap();
         let window_class = s!("window");
 
+        let background_brush = CreateSolidBrush(COLORREF(0x00FFFF00));
         let wc = WNDCLASSA {
             hCursor: LoadCursorW(None, IDC_ARROW).unwrap(),
             hInstance: instance,
             lpszClassName: window_class,
             style: CS_HREDRAW | CS_VREDRAW,
             lpfnWndProc: Some(callback),
+            hbrBackground: background_brush, 
             ..Default::default()
         };
 
@@ -55,7 +58,7 @@ fn main() {
             None
         );
 
-        set_background(handle, 1000, 1000);
+        //set_background(1000, 1000);
 
         let mut message = MSG::default();
 
@@ -71,17 +74,20 @@ extern "system" fn callback(window : HWND, message : u32, wparam : WPARAM, lpara
     unsafe {
         match message {
             WM_SIZE => {
-                let w = lparam.0 as u16 as f32; 
-                let h = (lparam.0 >> 16) as f32;
+                let w = lparam.0 as u16 as i32; 
+                let h = (lparam.0 >> 16) as i32;
 
                 println!("w{} :: h{}", w, h);
+
+                //set_background(w, h);
+                
 
                 LRESULT(0)
             },
             WM_PAINT => {
 
-                let z = GetDC(window);
-                BitBlt(z, 0, 0, 1000, 1000, BACKGROUND.assume_init().0, 0, 0, SRCCOPY);
+                //let z = GetDC(window);
+                //BitBlt(z, 0, 0, 1000, 1000, BACKGROUND.assume_init().0, 0, 0, SRCCOPY);
 
                 LRESULT(0)
             }

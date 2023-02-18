@@ -115,7 +115,10 @@ extern "system" fn callback(window : HWND, message : u32, wparam : WPARAM, lpara
                 let w = [2, 2];
                 PolyPolyline(z, &c as *const _, &w);
 
-                //BitBlt(z, 0, 0, 1000, 1000, BACKGROUND.assume_init().0, 0, 0, SRCCOPY);
+
+                SetBkColor(z, COLORREF(0x000000FF));
+                SetTextColor(z, COLORREF(0x00000000));
+                TextOutA(z, 30, 300, "blarg".as_bytes());
 
                 DeleteObject(pen);
 
